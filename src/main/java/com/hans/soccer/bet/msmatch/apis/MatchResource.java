@@ -1,18 +1,18 @@
 package com.hans.soccer.bet.msmatch.apis;
 
 import com.hans.soccer.bet.msmatch.dtos.MatchDto;
-import com.hans.soccer.bet.msmatch.dtos.TeamDto;
 import com.hans.soccer.bet.msmatch.entities.Match;
+import com.hans.soccer.bet.msmatch.model.ResponseTeam;
 import com.hans.soccer.bet.msmatch.services.MatchService;
+import com.hans.soccer.bet.msmatch.services.ValidateTeamService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 @RestController
@@ -23,10 +23,11 @@ public class MatchResource {
     private MatchService service;
 
     @Autowired
-    private WebClient.Builder webClientBuilder;
+    private ValidateTeamService validateTeamService;
+
 
     @GetMapping("/{matchId}")
-    ResponseEntity<?> getMatch (@PathVariable Long matchId) {
+    ResponseEntity<?> getMatch (@PathVariable Long matchId) throws Exception {
         Optional<Match> opt = service.getMatchById(matchId);
 
         if (opt.isEmpty()) {
@@ -37,13 +38,17 @@ public class MatchResource {
 
         Match entity = opt.get();
 
-        TeamDto visiting = new TeamDto.TeamDtoBuilder().addId(entity.getVisitingTeam()).addName("visiting").build();
-        TeamDto local = new TeamDto.TeamDtoBuilder().addId(entity.getLocalTeam()).addName("local").build();
+        ResponseTeam responseTeam = validateTeamService.validateTeams(entity.getVisitingTeam(), entity.getLocalTeam());
+
+        if (responseTeam.getInvalidTeam()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Collections.singletonMap("error", responseTeam.getErrorMessage()));
+        }
 
         MatchDto matchDto = new MatchDto.MatchDtoBuilder()
                 .addId(entity.getId())
-                .addLocalTeam(local)
-                .addVisitingTeam(visiting)
+                .addLocalTeam(responseTeam.getLocalTeam())
+                .addVisitingTeam(responseTeam.getVisitingTeam())
                 .addDescription(entity.getDescription())
                 .build();
 
@@ -64,21 +69,13 @@ public class MatchResource {
                         .body(Collections.singletonMap("error", msg));
             }
 
-            Optional<TeamDto> visiting = getTeamByWebClient(visitingId);
-            if (visiting.isEmpty()) {
-                String msg = "Visiting team not found";
+            ResponseTeam responseTeam = validateTeamService.validateTeams(visitingId, localId);
+
+            if (responseTeam.getInvalidTeam()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(Collections.singletonMap("error", msg));
+                        .body(Collections.singletonMap("error", responseTeam.getErrorMessage()));
             }
 
-            Optional<TeamDto> local = getTeamByWebClient(localId);
-            if (local.isEmpty()) {
-                String msg = "Local team not found";
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(Collections.singletonMap("error", msg));
-            }
-
-            // Mapper DTO to Entity
             Match entity = new Match.MatchBuilder()
                     .addId(matchDto.getId())
                     .addDescription(matchDto.getDescription())
@@ -101,24 +98,37 @@ public class MatchResource {
     }
 
     @GetMapping("/")
-    ResponseEntity<?> getMatches () {
-        return ResponseEntity.ok(service.getMatches());
-    }
+    ResponseEntity<?> getMatches (){
 
-    private Optional<TeamDto> getTeamByWebClient (Long teamId) {
         try {
-            TeamDto teamDto = webClientBuilder.build()
-                    .get()
-                    .uri("http://localhost:8095/api/football-teams/" + teamId )
-                    .retrieve()
-                    .bodyToMono(TeamDto.class)
-                    .block();
+            List<MatchDto> matchDtoList = new ArrayList<>();
 
-            return Optional.of(teamDto);
+            List<Match> matchList = service.getMatches();
+
+            for (Match entity : matchList) {
+                ResponseTeam responseTeam = validateTeamService.validateTeams(entity.getVisitingTeam(), entity.getLocalTeam());
+
+                if (responseTeam.getInvalidTeam()) {
+                    return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                            .body(Collections.singletonMap("error", responseTeam.getErrorMessage()));
+                }
+
+                MatchDto matchDto = new MatchDto.MatchDtoBuilder()
+                        .addId(entity.getId())
+                        .addDescription(entity.getDescription())
+                        .addLocalTeam(responseTeam.getLocalTeam())
+                        .addVisitingTeam(responseTeam.getVisitingTeam())
+                        .build();
+
+                matchDtoList.add(matchDto);
+            }
+
+            return ResponseEntity.ok(matchDtoList);
+
         } catch (Exception exception) {
-            System.out.println("Error " + exception.getMessage());
-
-            return Optional.empty();
+            System.out.println("Error get matches " + exception.getMessage());
+            return ResponseEntity.internalServerError()
+                    .body(Collections.singletonMap("error", exception.getMessage()));
         }
     }
 
