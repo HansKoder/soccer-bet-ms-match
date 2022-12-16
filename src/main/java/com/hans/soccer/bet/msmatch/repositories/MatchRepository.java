@@ -1,7 +1,7 @@
 package com.hans.soccer.bet.msmatch.repositories;
 
-import com.hans.soccer.bet.msmatch.entities.Match;
-import org.springframework.data.jpa.repository.JpaRepository;
+import com.hans.soccer.bet.msmatch.documents.Match;
+import org.springframework.data.mongodb.repository.MongoRepository;
 
-public interface MatchRepository extends JpaRepository<Match, Long> {
+public interface MatchRepository extends MongoRepository<Match, String> {
 }

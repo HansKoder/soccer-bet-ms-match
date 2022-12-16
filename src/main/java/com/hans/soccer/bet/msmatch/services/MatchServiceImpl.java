@@ -1,6 +1,6 @@
 package com.hans.soccer.bet.msmatch.services;
 
-import com.hans.soccer.bet.msmatch.entities.Match;
+import com.hans.soccer.bet.msmatch.documents.Match;
 import com.hans.soccer.bet.msmatch.repositories.MatchRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -20,7 +20,7 @@ public class MatchServiceImpl implements MatchService {
     }
 
     @Override
-    public Optional<Match> getMatchById(Long id) {
+    public Optional<Match> getMatchById(String id) {
         return repository.findById(id);
     }
 
