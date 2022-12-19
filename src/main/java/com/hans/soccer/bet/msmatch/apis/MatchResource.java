@@ -1,7 +1,9 @@
 package com.hans.soccer.bet.msmatch.apis;
 
-import com.hans.soccer.bet.msmatch.dtos.MatchDto;
 import com.hans.soccer.bet.msmatch.documents.Match;
+import com.hans.soccer.bet.msmatch.documents.Team;
+import com.hans.soccer.bet.msmatch.dtos.TeamDto;
+import com.hans.soccer.bet.msmatch.enums.StatusBetEnum;
 import com.hans.soccer.bet.msmatch.services.MatchService;
 import com.hans.soccer.bet.msmatch.services.ValidateTeamService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,11 +39,30 @@ public class MatchResource {
         return ResponseEntity.ok().body(opt.get());
     }
 
-    @PostMapping("/")
-    ResponseEntity<?> saveMatch (@RequestBody Match entity) {
-        Match resp = service.save(entity);
-        System.out.println(resp);
-        return ResponseEntity.status(HttpStatus.CREATED).body(service.save(entity));
+    @PostMapping("/add-teams")
+    ResponseEntity<?> saveMatch (@RequestBody List<TeamDto> teams) {
+        if (teams.isEmpty()) return ResponseEntity.noContent().build();
+
+        if (teams.size() != 2) {
+            String msg = "Invalid number of teams";
+            return ResponseEntity.badRequest()
+                    .body(Collections.singletonMap("error", msg));
+        }
+
+        Match match = new Match.MatchBuilder()
+                .setTeamA(mapTeam(teams.get(0)))
+                .setTeamB(mapTeam(teams.get(1)))
+                .setStatusBet(StatusBetEnum.STOP)
+                .builder();
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(service.save(match));
+    }
+
+    private Team mapTeam (TeamDto teamDto) {
+        return new Team.TeamBuilder()
+                .setId(teamDto.getId())
+                .setTeamName(teamDto.getTeamName())
+                .builder();
     }
 
     @GetMapping("/")

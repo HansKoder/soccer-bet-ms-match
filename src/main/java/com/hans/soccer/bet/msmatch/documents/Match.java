@@ -1,5 +1,6 @@
 package com.hans.soccer.bet.msmatch.documents;
 
+import com.hans.soccer.bet.msmatch.enums.StatusBetEnum;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -7,13 +8,15 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public class Match {
     @Id
     private String id;
-    private String teamA;
-    private String teamB;
+    private Team teamA;
+    private Team teamB;
+    private StatusBetEnum statusBet;
 
-    public Match(String id, String teamA, String teamB) {
-        this.id = id;
-        this.teamA = teamA;
-        this.teamB = teamB;
+
+    public Match(MatchBuilder builder) {
+        this.teamA = builder.teamA;
+        this.teamB = builder.teamB;
+        this.statusBet = builder.statusBet;
     }
 
     public Match() {
@@ -27,28 +30,62 @@ public class Match {
         this.id = id;
     }
 
-    public String getTeamA() {
+    public Team getTeamA() {
         return teamA;
     }
 
-    public void setTeamA(String teamA) {
+    public void setTeamA(Team teamA) {
         this.teamA = teamA;
     }
 
-    public String getTeamB() {
+    public Team getTeamB() {
         return teamB;
     }
 
-    public void setTeamB(String teamB) {
+    public void setTeamB(Team teamB) {
         this.teamB = teamB;
+    }
+
+    public StatusBetEnum getStatusBet() {
+        return statusBet;
+    }
+
+    public void setStatusBet(StatusBetEnum statusBet) {
+        this.statusBet = statusBet;
+    }
+
+    public static class MatchBuilder {
+        private Team teamA;
+        private Team teamB;
+        private StatusBetEnum statusBet;
+
+        public MatchBuilder setTeamA (Team team) {
+            this.teamA = team;
+            return this;
+        }
+
+        public MatchBuilder setTeamB (Team team) {
+            this.teamB = team;
+            return this;
+        }
+
+        public MatchBuilder setStatusBet (StatusBetEnum statusBet) {
+            this.statusBet = statusBet;
+            return this;
+        }
+
+        public Match builder () {
+            return new Match(this);
+        }
     }
 
     @Override
     public String toString() {
         return "Match{" +
                 "id='" + id + '\'' +
-                ", teamA='" + teamA + '\'' +
-                ", teamB='" + teamB + '\'' +
+                ", teamA=" + teamA +
+                ", teamB=" + teamB +
+                ", statusBet=" + statusBet +
                 '}';
     }
 }
