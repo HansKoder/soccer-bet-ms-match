@@ -22,6 +22,9 @@ public class Team {
         goals = builder.goals;
     }
 
+    public Team() {
+    }
+
     public Long getId() {
         return id;
     }
