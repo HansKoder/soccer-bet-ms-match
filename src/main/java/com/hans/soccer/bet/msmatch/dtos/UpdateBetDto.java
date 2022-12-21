@@ -3,13 +3,13 @@ package com.hans.soccer.bet.msmatch.dtos;
 public class UpdateBetDto {
 
     private String teamAId;
-    private Long teamABetPercentage;
+    private Double teamABetPercentage;
 
     private String teamBId;
 
-    private Long teamBBetPercentage;
+    private Double teamBBetPercentage;
 
-    public UpdateBetDto(String teamAId, Long teamABetPercentage, String teamBId, Long teamBBetPercentage) {
+    public UpdateBetDto(String teamAId, Double teamABetPercentage, String teamBId, Double teamBBetPercentage) {
         this.teamAId = teamAId;
         this.teamABetPercentage = teamABetPercentage;
         this.teamBId = teamBId;
@@ -24,11 +24,11 @@ public class UpdateBetDto {
         this.teamAId = teamAId;
     }
 
-    public Long getTeamABetPercentage() {
+    public Double getTeamABetPercentage() {
         return teamABetPercentage;
     }
 
-    public void setTeamABetPercentage(Long teamABetPercentage) {
+    public void setTeamABetPercentage(Double teamABetPercentage) {
         this.teamABetPercentage = teamABetPercentage;
     }
 
@@ -40,11 +40,11 @@ public class UpdateBetDto {
         this.teamBId = teamBId;
     }
 
-    public Long getTeamBBetPercentage() {
+    public Double getTeamBBetPercentage() {
         return teamBBetPercentage;
     }
 
-    public void setTeamBBetPercentage(Long teamBBetPercentage) {
+    public void setTeamBBetPercentage(Double teamBBetPercentage) {
         this.teamBBetPercentage = teamBBetPercentage;
     }
 }

@@ -4,6 +4,7 @@ import com.hans.soccer.bet.msmatch.documents.Match;
 import com.hans.soccer.bet.msmatch.documents.Team;
 import com.hans.soccer.bet.msmatch.dtos.TeamDto;
 import com.hans.soccer.bet.msmatch.dtos.UpdateBetDto;
+import com.hans.soccer.bet.msmatch.enums.ScoreMatchEnum;
 import com.hans.soccer.bet.msmatch.enums.StatusBetEnum;
 import com.hans.soccer.bet.msmatch.enums.StatusMatchEnum;
 import com.hans.soccer.bet.msmatch.services.MatchService;
@@ -89,22 +90,16 @@ public class MatchResource {
         // It modifies its bet if status match is different STOP
         StatusMatchEnum currentStatus = match.getStatusMatch();
         if (currentStatus.equals(StatusMatchEnum.PLAY) || currentStatus.equals(StatusMatchEnum.FINISH)) {
-            String err = "Cannot update bet when match  has status play or finish ";
+            String err = "Cannot update bet when match has status play or finish ";
             return ResponseEntity.badRequest()
                     .body(Collections.singletonMap("error", err));
         }
 
-        Team teamA = new Team.TeamBuilder()
-                .setId(match.getTeamA().getId())
-                .setTeamName(match.getTeamA().getTeamName())
-                .setBetPercentage(updateBet.getTeamABetPercentage())
-                .builder();
+        Team teamA = match.getTeamA();
+        teamA.setBetPercentage(updateBet.getTeamABetPercentage());
 
-        Team teamB = new Team.TeamBuilder()
-                .setId(match.getTeamB().getId())
-                .setTeamName(match.getTeamB().getTeamName())
-                .setBetPercentage(updateBet.getTeamBBetPercentage())
-                .builder();
+        Team teamB = match.getTeamB();
+        teamB.setBetPercentage(updateBet.getTeamBBetPercentage());
 
         match.setTeamA(teamA);
         match.setTeamB(teamB);
@@ -128,12 +123,120 @@ public class MatchResource {
 
         Match match = optionalMatch.get();
 
+        if (match.getStatusMatch().equals(StatusMatchEnum.PLAY)) {
+            return ResponseEntity.ok().body(Collections.singletonMap("message", "Match has status play"));
+        }
+
         match.setStatusMatch(StatusMatchEnum.PLAY);
         match.setStatusBet(StatusBetEnum.STOP);
+
+        Team teamA = match.getTeamA();
+        teamA.setGoals(0);
+
+        Team teamB = match.getTeamB();
+        teamB.setGoals(0);
+
+        match.setTeamA(teamA);
+        match.setTeamB(teamB);
 
         service.save(match);
 
         return ResponseEntity.ok(Collections.singletonMap("message", "Start Match with successfully!"));
+    }
+
+    @PutMapping("/goal/{matchId}/{teamId}")
+    ResponseEntity<?> goal (
+            @PathVariable String matchId,
+            @PathVariable Long teamId
+    ) {
+        Optional<Match> optionalMatch = service.getMatchById(matchId);
+
+        if (optionalMatch.isEmpty()) {
+            String err = "Match with the ID " + matchId + " Not found in the DB!";
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Collections.singletonMap("error", err));
+        }
+
+        Match match = optionalMatch.get();
+
+        if (!match.getStatusMatch().equals(StatusMatchEnum.PLAY)) {
+            String err = "Match should has a status play";
+            return ResponseEntity.badRequest().body(Collections.singletonMap("error", err));
+        }
+
+        Boolean notFoundTeam = match.getTeamA().getId() != teamId && match.getTeamB().getId() != teamId;
+        if (notFoundTeam) {
+            String err = "Not found team with ID " + teamId;
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Collections.singletonMap("error", err));
+        }
+
+        Team teamA = match.getTeamA();
+        Team teamB = match.getTeamB();
+
+        if (teamA.getId() == teamId) {
+            teamA.setGoals(teamA.getGoals() + 1);
+            match.setTeamA(teamA);
+        } else {
+            teamB.setGoals(teamB.getGoals() + 1);
+            match.setTeamB(teamB);
+        }
+
+        service.save(match);
+
+        return ResponseEntity.ok().body(Collections.singletonMap("message", "Add new goal with successfully"));
+    }
+
+    private Team getTeam (Match match, Long teamId) {
+        if (match.getTeamA().getId() == teamId) {
+            return match.getTeamA();
+        }
+
+        return match.getTeamB();
+    }
+
+    @PutMapping("/finish-match/{matchId}")
+    ResponseEntity<?> finishMatch (@PathVariable String matchId) {
+        Optional<Match> optionalMatch = service.getMatchById(matchId);
+
+        if (optionalMatch.isEmpty()) {
+            String err = "Match with the ID " + matchId + " Not found in the DB!";
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Collections.singletonMap("error", err));
+        }
+
+        Match match = optionalMatch.get();
+
+        if (match.getStatusMatch().equals(StatusMatchEnum.FINISH)) {
+            return ResponseEntity.ok().body(Collections.singletonMap("message", "Match has status finish"));
+        }
+
+        match.setStatusMatch(StatusMatchEnum.FINISH);
+        match.setStatusBet(StatusBetEnum.FINISH);
+
+        Team teamA = match.getTeamA();
+        Team teamB = match.getTeamB();
+
+        System.out.println("team A " + teamA.getGoals());
+        System.out.println("team B " + teamB.getGoals());
+
+        if (teamA.getGoals() == teamB.getGoals()) {
+            teamA.setScoreMatch(ScoreMatchEnum.TIE);
+            teamB.setScoreMatch(ScoreMatchEnum.TIE);
+        }
+        else if (teamA.getGoals() > teamB.getGoals()) {
+            teamA.setScoreMatch(ScoreMatchEnum.WIN);
+            teamB.setScoreMatch(ScoreMatchEnum.MISS);
+        } else {
+            teamA.setScoreMatch(ScoreMatchEnum.MISS);
+            teamB.setScoreMatch(ScoreMatchEnum.WIN);
+        }
+
+        match.setTeamA(teamA);
+        match.setTeamB(teamB);
+
+        service.save(match);
+
+        return ResponseEntity.ok().body(Collections.singletonMap("ok", "Match is finish with successfully"));
     }
 
 

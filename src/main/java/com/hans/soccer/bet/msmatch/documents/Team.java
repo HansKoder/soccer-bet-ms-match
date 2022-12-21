@@ -8,7 +8,7 @@ public class Team {
     private Long id;
     private String teamName;
 
-    private Long betPercentage;
+    private Double betPercentage;
 
     private ScoreMatchEnum scoreMatch;
 
@@ -41,11 +41,35 @@ public class Team {
         this.teamName = teamName;
     }
 
+    public Double getBetPercentage() {
+        return betPercentage;
+    }
+
+    public void setBetPercentage(Double betPercentage) {
+        this.betPercentage = betPercentage;
+    }
+
+    public ScoreMatchEnum getScoreMatch() {
+        return scoreMatch;
+    }
+
+    public void setScoreMatch(ScoreMatchEnum scoreMatch) {
+        this.scoreMatch = scoreMatch;
+    }
+
+    public Integer getGoals() {
+        return goals;
+    }
+
+    public void setGoals(Integer goals) {
+        this.goals = goals;
+    }
+
     public static class TeamBuilder {
         private Long id;
         private String teamName;
 
-        private Long betPercentage;
+        private Double betPercentage;
 
 
         private ScoreMatchEnum scoreMatch;
@@ -62,7 +86,7 @@ public class Team {
             return this;
         }
 
-        public TeamBuilder setBetPercentage (Long percentage) {
+        public TeamBuilder setBetPercentage (Double percentage) {
             this.betPercentage = percentage;
             return this;
         }
