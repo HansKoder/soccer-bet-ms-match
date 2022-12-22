@@ -1,14 +1,11 @@
 package com.hans.soccer.bet.msmatch.documents;
 
 import com.hans.soccer.bet.msmatch.enums.ScoreMatchEnum;
-import com.hans.soccer.bet.msmatch.enums.StatusBetEnum;
 
 public class Team {
 
     private Long id;
     private String teamName;
-
-    private Double betPercentage;
 
     private ScoreMatchEnum scoreMatch;
 
@@ -17,7 +14,6 @@ public class Team {
     public Team(TeamBuilder builder) {
         id = builder.id;
         teamName = builder.teamName;
-        betPercentage = builder.betPercentage;
         scoreMatch = builder.scoreMatch;
         goals = builder.goals;
     }
@@ -41,14 +37,6 @@ public class Team {
         this.teamName = teamName;
     }
 
-    public Double getBetPercentage() {
-        return betPercentage;
-    }
-
-    public void setBetPercentage(Double betPercentage) {
-        this.betPercentage = betPercentage;
-    }
-
     public ScoreMatchEnum getScoreMatch() {
         return scoreMatch;
     }
@@ -69,8 +57,6 @@ public class Team {
         private Long id;
         private String teamName;
 
-        private Double betPercentage;
-
 
         private ScoreMatchEnum scoreMatch;
 
@@ -83,11 +69,6 @@ public class Team {
 
         public TeamBuilder setTeamName (String teamName) {
             this.teamName = teamName;
-            return this;
-        }
-
-        public TeamBuilder setBetPercentage (Double percentage) {
-            this.betPercentage = percentage;
             return this;
         }
 

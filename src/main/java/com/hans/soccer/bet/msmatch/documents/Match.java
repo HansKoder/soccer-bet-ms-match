@@ -1,6 +1,5 @@
 package com.hans.soccer.bet.msmatch.documents;
 
-import com.hans.soccer.bet.msmatch.enums.StatusBetEnum;
 import com.hans.soccer.bet.msmatch.enums.StatusMatchEnum;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -14,13 +13,10 @@ public class Match {
 
     private StatusMatchEnum statusMatch;
 
-    private StatusBetEnum statusBet;
-
 
     public Match(MatchBuilder builder) {
         this.teamA = builder.teamA;
         this.teamB = builder.teamB;
-        this.statusBet = builder.statusBet;
         this.statusMatch = builder.statusMatch;
     }
 
@@ -51,14 +47,6 @@ public class Match {
         this.teamB = teamB;
     }
 
-    public StatusBetEnum getStatusBet() {
-        return statusBet;
-    }
-
-    public void setStatusBet(StatusBetEnum statusBet) {
-        this.statusBet = statusBet;
-    }
-
     public StatusMatchEnum getStatusMatch() {
         return statusMatch;
     }
@@ -70,7 +58,6 @@ public class Match {
     public static class MatchBuilder {
         private Team teamA;
         private Team teamB;
-        private StatusBetEnum statusBet;
 
         private StatusMatchEnum statusMatch;
 
@@ -81,11 +68,6 @@ public class Match {
 
         public MatchBuilder setTeamB (Team team) {
             this.teamB = team;
-            return this;
-        }
-
-        public MatchBuilder setStatusBet (StatusBetEnum statusBet) {
-            this.statusBet = statusBet;
             return this;
         }
 
@@ -105,7 +87,6 @@ public class Match {
                 "id='" + id + '\'' +
                 ", teamA=" + teamA +
                 ", teamB=" + teamB +
-                ", statusBet=" + statusBet +
                 '}';
     }
 }

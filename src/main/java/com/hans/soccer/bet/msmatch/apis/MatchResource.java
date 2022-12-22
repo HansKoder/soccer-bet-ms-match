@@ -3,9 +3,7 @@ package com.hans.soccer.bet.msmatch.apis;
 import com.hans.soccer.bet.msmatch.documents.Match;
 import com.hans.soccer.bet.msmatch.documents.Team;
 import com.hans.soccer.bet.msmatch.dtos.TeamDto;
-import com.hans.soccer.bet.msmatch.dtos.UpdateBetDto;
 import com.hans.soccer.bet.msmatch.enums.ScoreMatchEnum;
-import com.hans.soccer.bet.msmatch.enums.StatusBetEnum;
 import com.hans.soccer.bet.msmatch.enums.StatusMatchEnum;
 import com.hans.soccer.bet.msmatch.services.MatchService;
 import com.hans.soccer.bet.msmatch.services.ValidateTeamService;
@@ -68,47 +66,10 @@ public class MatchResource {
         Match match = new Match.MatchBuilder()
                 .setTeamA(mapTeam(teams.get(0)))
                 .setTeamB(mapTeam(teams.get(1)))
-                .setStatusBet(StatusBetEnum.STOP)
                 .setStatusMatch(StatusMatchEnum.WAIT)
                 .builder();
 
         return ResponseEntity.status(HttpStatus.CREATED).body(service.save(match));
-    }
-
-    @PutMapping("/update-bet/{matchId}")
-    ResponseEntity<?> updateBet (@PathVariable String matchId, @RequestBody UpdateBetDto updateBet) {
-        Optional<Match> optionalMatch = service.getMatchById(matchId);
-
-        if (optionalMatch.isEmpty()) {
-            String err = "Match with the ID " + matchId + " Not found in the DB!";
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Collections.singletonMap("error", err));
-        }
-
-        Match match = optionalMatch.get();
-
-        // It modifies its bet if status match is different STOP
-        StatusMatchEnum currentStatus = match.getStatusMatch();
-        if (currentStatus.equals(StatusMatchEnum.PLAY) || currentStatus.equals(StatusMatchEnum.FINISH)) {
-            String err = "Cannot update bet when match has status play or finish ";
-            return ResponseEntity.badRequest()
-                    .body(Collections.singletonMap("error", err));
-        }
-
-        Team teamA = match.getTeamA();
-        teamA.setBetPercentage(updateBet.getTeamABetPercentage());
-
-        Team teamB = match.getTeamB();
-        teamB.setBetPercentage(updateBet.getTeamBBetPercentage());
-
-        match.setTeamA(teamA);
-        match.setTeamB(teamB);
-
-        match.setStatusBet(StatusBetEnum.OPEN);
-
-        service.save(match);
-
-        return ResponseEntity.ok(Collections.singletonMap("message", "Update Bet with successfully!"));
     }
 
     @PutMapping("/start-match/{matchId}")
@@ -128,7 +89,6 @@ public class MatchResource {
         }
 
         match.setStatusMatch(StatusMatchEnum.PLAY);
-        match.setStatusBet(StatusBetEnum.STOP);
 
         Team teamA = match.getTeamA();
         teamA.setGoals(0);
@@ -211,7 +171,6 @@ public class MatchResource {
         }
 
         match.setStatusMatch(StatusMatchEnum.FINISH);
-        match.setStatusBet(StatusBetEnum.FINISH);
 
         Team teamA = match.getTeamA();
         Team teamB = match.getTeamB();
@@ -239,13 +198,11 @@ public class MatchResource {
         return ResponseEntity.ok().body(Collections.singletonMap("ok", "Match is finish with successfully"));
     }
 
-
     private Team mapTeam (TeamDto teamDto) {
         return new Team.TeamBuilder()
                 .setId(teamDto.getId())
                 .setTeamName(teamDto.getTeamName())
                 .builder();
     }
-
 
 }
