@@ -2,11 +2,14 @@ package com.hans.soccer.bet.msmatch.apis;
 
 import com.hans.soccer.bet.msmatch.documents.Match;
 import com.hans.soccer.bet.msmatch.documents.Team;
+import com.hans.soccer.bet.msmatch.dtos.AddMatchDTO;
 import com.hans.soccer.bet.msmatch.dtos.TeamDto;
 import com.hans.soccer.bet.msmatch.enums.ScoreMatchEnum;
 import com.hans.soccer.bet.msmatch.enums.StatusMatchEnum;
+import com.hans.soccer.bet.msmatch.mapper.TournamentMapper;
 import com.hans.soccer.bet.msmatch.services.MatchService;
 import com.hans.soccer.bet.msmatch.services.ValidateTeamService;
+import org.mapstruct.factory.Mappers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +22,9 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/api/matches")
 public class MatchResource {
+
+    @Autowired
+    private TournamentMapper mapper = Mappers.getMapper(TournamentMapper.class);
 
     @Autowired
     private MatchService service;
@@ -53,9 +59,11 @@ public class MatchResource {
         }
     }
 
-    @PostMapping("/add-teams")
-    ResponseEntity<?> addTeams (@RequestBody List<TeamDto> teams) {
-        if (teams.isEmpty()) return ResponseEntity.noContent().build();
+    @PostMapping("/add-match")
+    ResponseEntity<?> addTeams (@RequestBody AddMatchDTO addMatch) {
+        if (addMatch.getTeams().isEmpty()) return ResponseEntity.noContent().build();
+
+        List<TeamDto> teams = addMatch.getTeams();
 
         if (teams.size() != 2) {
             String msg = "Invalid number of teams";
@@ -66,8 +74,11 @@ public class MatchResource {
         Match match = new Match.MatchBuilder()
                 .setTeamA(mapTeam(teams.get(0)))
                 .setTeamB(mapTeam(teams.get(1)))
+                .setTournament(mapper.tournamentDtoToTournament(addMatch.getTournament()))
                 .setStatusMatch(StatusMatchEnum.WAIT)
                 .builder();
+
+        System.out.println("match " + match.getTournament().getName());
 
         return ResponseEntity.status(HttpStatus.CREATED).body(service.save(match));
     }

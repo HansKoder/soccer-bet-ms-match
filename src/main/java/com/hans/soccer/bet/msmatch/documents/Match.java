@@ -11,12 +11,14 @@ public class Match {
     private Team teamA;
     private Team teamB;
 
-    private StatusMatchEnum statusMatch;
+    private Tournament tournament;
 
+    private StatusMatchEnum statusMatch;
 
     public Match(MatchBuilder builder) {
         this.teamA = builder.teamA;
         this.teamB = builder.teamB;
+        this.tournament = builder.tournament;
         this.statusMatch = builder.statusMatch;
     }
 
@@ -55,11 +57,21 @@ public class Match {
         this.statusMatch = statusMatch;
     }
 
+    public Tournament getTournament() {
+        return tournament;
+    }
+
+    public void setTournament(Tournament tournament) {
+        this.tournament = tournament;
+    }
+
     public static class MatchBuilder {
         private Team teamA;
         private Team teamB;
 
         private StatusMatchEnum statusMatch;
+
+        private Tournament tournament;
 
         public MatchBuilder setTeamA (Team team) {
             this.teamA = team;
@@ -76,6 +88,11 @@ public class Match {
             return this;
         }
 
+        public MatchBuilder setTournament (Tournament tournament) {
+            this.tournament = tournament;
+            return this;
+        }
+
         public Match builder () {
             return new Match(this);
         }
@@ -87,6 +104,7 @@ public class Match {
                 "id='" + id + '\'' +
                 ", teamA=" + teamA +
                 ", teamB=" + teamB +
+                ", tournament=" + tournament +
                 '}';
     }
 }
