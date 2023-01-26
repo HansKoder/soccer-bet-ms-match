@@ -3,12 +3,15 @@ package com.hans.soccer.bet.msmatch.apis;
 import com.hans.soccer.bet.msmatch.documents.Match;
 import com.hans.soccer.bet.msmatch.documents.Team;
 import com.hans.soccer.bet.msmatch.dtos.AddMatchDTO;
-import com.hans.soccer.bet.msmatch.dtos.TeamDto;
+import com.hans.soccer.bet.msmatch.dtos.TeamDTO;
+import com.hans.soccer.bet.msmatch.dtos.TournamentDTO;
 import com.hans.soccer.bet.msmatch.enums.ScoreMatchEnum;
 import com.hans.soccer.bet.msmatch.enums.StatusMatchEnum;
 import com.hans.soccer.bet.msmatch.mapper.TournamentMapper;
+import com.hans.soccer.bet.msmatch.model.Response;
+import com.hans.soccer.bet.msmatch.model.ResponseTeam;
 import com.hans.soccer.bet.msmatch.services.MatchService;
-import com.hans.soccer.bet.msmatch.services.ValidateTeamService;
+import com.hans.soccer.bet.msmatch.services.ValidationsMatchService;
 import org.mapstruct.factory.Mappers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -30,7 +33,7 @@ public class MatchResource {
     private MatchService service;
 
     @Autowired
-    private ValidateTeamService validateTeamService;
+    private ValidationsMatchService validationsMatchService;
 
 
     @GetMapping("/{matchId}")
@@ -63,7 +66,7 @@ public class MatchResource {
     ResponseEntity<?> addTeams (@RequestBody AddMatchDTO addMatch) {
         if (addMatch.getTeams().isEmpty()) return ResponseEntity.noContent().build();
 
-        List<TeamDto> teams = addMatch.getTeams();
+        List<Long> teams = addMatch.getTeams();
 
         if (teams.size() != 2) {
             String msg = "Invalid number of teams";
@@ -71,14 +74,34 @@ public class MatchResource {
                     .body(Collections.singletonMap("error", msg));
         }
 
+        Long idVisitingTeam = addMatch.getTeams().get(0);
+        Long idLocalTeam = addMatch.getTeams().get(1);
+
+        ResponseTeam responseTeam = validationsMatchService.existTeams(idVisitingTeam, idLocalTeam);
+
+        if (responseTeam.getInvalidTeam()) {
+            String err = responseTeam.getErrorMessage();
+
+            return ResponseEntity.badRequest()
+                    .body(Collections.singletonMap("error", err));
+        }
+
+        Response response = validationsMatchService.existTournament(addMatch.getTournamentId());
+
+        if (response.getError()) {
+            String err = response.getErrorMessage();
+
+            return ResponseEntity
+                    .badRequest()
+                    .body(Collections.singletonMap("error", err));
+        }
+
         Match match = new Match.MatchBuilder()
-                .setTeamA(mapTeam(teams.get(0)))
-                .setTeamB(mapTeam(teams.get(1)))
-                .setTournament(mapper.tournamentDtoToTournament(addMatch.getTournament()))
+                .setTeamA(mapTeam(responseTeam.getLocalTeam()))
+                .setTeamB(mapTeam(responseTeam.getVisitingTeam()))
+                .setTournament(mapper.tournamentDtoToTournament((TournamentDTO) response.getData()))
                 .setStatusMatch(StatusMatchEnum.WAIT)
                 .builder();
-
-        System.out.println("match " + match.getTournament().getName());
 
         return ResponseEntity.status(HttpStatus.CREATED).body(service.save(match));
     }
@@ -186,9 +209,6 @@ public class MatchResource {
         Team teamA = match.getTeamA();
         Team teamB = match.getTeamB();
 
-        System.out.println("team A " + teamA.getGoals());
-        System.out.println("team B " + teamB.getGoals());
-
         if (teamA.getGoals() == teamB.getGoals()) {
             teamA.setScoreMatch(ScoreMatchEnum.TIE);
             teamB.setScoreMatch(ScoreMatchEnum.TIE);
@@ -209,10 +229,10 @@ public class MatchResource {
         return ResponseEntity.ok().body(Collections.singletonMap("ok", "Match is finish with successfully"));
     }
 
-    private Team mapTeam (TeamDto teamDto) {
+    private Team mapTeam (TeamDTO teamDto) {
         return new Team.TeamBuilder()
                 .setId(teamDto.getId())
-                .setTeamName(teamDto.getTeamName())
+                .setTeamName(teamDto.getName())
                 .builder();
     }
 

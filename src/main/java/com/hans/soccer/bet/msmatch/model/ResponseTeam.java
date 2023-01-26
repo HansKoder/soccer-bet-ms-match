@@ -1,13 +1,13 @@
 package com.hans.soccer.bet.msmatch.model;
 
-import com.hans.soccer.bet.msmatch.dtos.TeamDto;
+import com.hans.soccer.bet.msmatch.dtos.TeamDTO;
 
 public class ResponseTeam {
 
     private Boolean isInvalidTeam;
     private String errorMessage;
-    private TeamDto visitingTeam;
-    private TeamDto localTeam;
+    private TeamDTO visitingTeam;
+    private TeamDTO localTeam;
 
     public ResponseTeam(ResponseTeamBuilder builder) {
         this.isInvalidTeam = builder.isInvalidTeam;
@@ -24,11 +24,11 @@ public class ResponseTeam {
         return errorMessage;
     }
 
-    public TeamDto getVisitingTeam() {
+    public TeamDTO getVisitingTeam() {
         return visitingTeam;
     }
 
-    public TeamDto getLocalTeam() {
+    public TeamDTO getLocalTeam() {
         return localTeam;
     }
 
@@ -36,8 +36,8 @@ public class ResponseTeam {
 
         private Boolean isInvalidTeam;
         private String errorMessage;
-        private TeamDto visitingTeam;
-        private TeamDto localTeam;
+        private TeamDTO visitingTeam;
+        private TeamDTO localTeam;
 
         public ResponseTeamBuilder() {
             this.isInvalidTeam = Boolean.FALSE;
@@ -54,12 +54,12 @@ public class ResponseTeam {
             return this;
         }
 
-        public ResponseTeamBuilder addVisitingTeam (TeamDto team) {
+        public ResponseTeamBuilder addVisitingTeam (TeamDTO team) {
             this.visitingTeam = team;
             return this;
         }
 
-        public ResponseTeamBuilder addLocalTeam (TeamDto team) {
+        public ResponseTeamBuilder addLocalTeam (TeamDTO team) {
             this.localTeam = team;
             return this;
         }
